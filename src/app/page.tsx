@@ -5,7 +5,6 @@ import BookList from "./components/BookList";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import MobileMenu from "./components/MobileMenu";
-import BookManagement from "./components/BookManagement";
 
 export default function Home() {
     const [menuOpen, setMenuOpen] = useState(false);

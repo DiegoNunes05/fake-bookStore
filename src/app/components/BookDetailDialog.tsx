@@ -10,6 +10,7 @@ import {
 import {Button} from "@/components/ui/button";
 import {Textarea} from "@/components/ui/textarea";
 import {Book} from "../types";
+import Image from "next/image";
 
 interface BookComments {
   [key: string]: string;
@@ -51,9 +52,11 @@ export default function BookDetailDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             <div className="flex justify-center">
               {book.volumeInfo.imageLinks?.thumbnail && (
-                <img
+                <Image
                   src={book.volumeInfo.imageLinks.thumbnail}
                   alt={book.volumeInfo.title}
+                  width={200}
+                  height={300}
                   className="w-full max-w-[200px] h-auto object-cover border-[1px]"
                 />
               )}

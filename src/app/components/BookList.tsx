@@ -10,6 +10,7 @@ import BookDetailDialog from "./BookDetailDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 
 interface BookListProps {
   activeCategory?: string;
@@ -230,9 +231,11 @@ export default function BookList({activeCategory = ""}: BookListProps) {
             onClick={() => handleBookClick(book)}
           >
             {book.volumeInfo.imageLinks?.thumbnail && (
-              <img
+              <Image
                 src={book.volumeInfo.imageLinks.thumbnail}
                 alt={book.volumeInfo.title}
+                width={200}
+                height={300}
                 className="w-full h-[200px] object-fill border-[1px]"
               />
             )}
