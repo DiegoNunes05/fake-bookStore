@@ -1,6 +1,15 @@
 "use client";
 
-export default function Header() {
+import {CardDescription, CardTitle} from "@/components/ui/card";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { GraduationCap, Star } from "lucide-react";
+
+interface HeaderProps {
+  favorites: string[];
+}
+
+export default function Header({favorites}: HeaderProps) {
   return (
     <header className="bg-slate-100 relative">
       <nav
@@ -8,22 +17,9 @@ export default function Header() {
         className="mx-auto flex max-w-7xl items-center justify-between p-4"
       >
         <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Your Company</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-5 lg:size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"
-              />
-            </svg>
+          <a href="#" onClick={() => window.location.reload()}>
+            <span className="sr-only">Test BookStore</span>
+            <GraduationCap className="w-6 h-6" />
           </a>
         </div>
         <div>
@@ -32,20 +28,76 @@ export default function Header() {
           </span>
         </div>
         <div className="lg:flex lg:flex-1 lg:justify-end cursor-pointer">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="size-5 lg:size-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5"
-            />
-          </svg>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Star className="w-5 h-5" />
+            </PopoverTrigger>
+            <PopoverContent
+              key={favorites.length}
+              className="ml-4 mr-4 max-w-xs"
+              style={{overflow: "hidden"}}
+            >
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col">
+                  <div className="flex flex-row justify-between items-center">
+                    <CardTitle className="text-xl font-roboto">
+                      Notifications
+                    </CardTitle>
+                  </div>
+                  <CardDescription className="font-roboto">
+                    <p className="text-sm text-gray-600">
+                      {favorites.length > 0
+                        ? `You have ${favorites.length} favorite book(s)!`
+                        : "You don't have any favorite books!"}
+                    </p>
+                    <Separator className="mt-2" />
+                    {favorites.length > 0 && (
+                      <div className="mt-5">
+                        {favorites.map((favorite, index) => (
+                          <div key={index} className="flex flex-col">
+                            <p
+                              key={index}
+                              className="text-xl font-smooch font-bold text-black"
+                            >
+                              {favorite}
+                            </p>
+                            <div className="mt-2 border-b border-dotted border-gray-300"></div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col items-center justify-center py-8">
+                  {favorites.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <div className="flex flex-col items-center animate-fade-in">
+                        <div className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-gradient-to-r from-orange-400 via-pink-500 to-purple-500">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-8 w-8 text-[var(--primary-green)]"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                        <p className="mt-5 text-md font-medium font-roboto">
+                          You don't have any favorite books!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </nav>
       <style jsx>{`

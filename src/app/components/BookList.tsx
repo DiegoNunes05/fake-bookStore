@@ -5,15 +5,25 @@ import {Book} from "../types";
 import {fetchBooks} from "../api/book";
 import "../styles/bookList.css";
 import {Input} from "@/components/ui/input";
-import Loader from "./loader";
+import Loading from "./Loading";
 import BookDetailDialog from "./BookDetailDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {Button} from "@/components/ui/button";
+import {Pencil, Plus, Star, Trash2} from "lucide-react";
 import Image from "next/image";
 
 interface BookListProps {
   activeCategory?: string;
+  onFavorite: (title: string) => void;
+  favorites: string[];
 }
 
 interface BookFormData {
@@ -21,10 +31,14 @@ interface BookFormData {
   authors: string;
   description: string;
   category: string;
-  publishedDate: string
+  publishedDate: string;
 }
 
-export default function BookList({activeCategory = ""}: BookListProps) {
+export default function BookList({
+  activeCategory = "",
+  onFavorite,
+  favorites
+}: BookListProps) {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,39 +46,58 @@ export default function BookList({activeCategory = ""}: BookListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isConfirmDelete, setIsConfirmDelete] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState(activeCategory);
   const [formData, setFormData] = useState<BookFormData>({
-      title: "",
-      authors: "",
-      description: "",
-      category: "",
-      publishedDate: "",
-    });
+    title: "",
+    authors: "",
+    description: "",
+    category: "",
+    publishedDate: "",
+  });
 
   useEffect(() => {
-    const loadBooks = async () => {
+    const loadInitialBooks = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const fetchedBooks = await fetchBooks(activeCategory);
+      const fetchedBooks = await fetchBooks(activeCategory, "");
       setBooks(fetchedBooks);
       setLoading(false);
     };
+    loadInitialBooks();
+  }, [activeCategory]);
 
-    loadBooks();
-  }, [activeCategory]); 
+  useEffect(() => {
+    if (!loading) {
+      const loadSearchedBooks = async () => {
+        const fetchedBooks = await fetchBooks(activeCategory, searchQuery);
+        setBooks(fetchedBooks);
+      };
+      const delayDebounceFn = setTimeout(() => {
+        loadSearchedBooks();
+      }, 500);
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchQuery]);
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 768); 
+      setIsMobile(window.innerWidth <= 768);
     };
-    checkScreenSize(); 
-    window.addEventListener("resize", checkScreenSize); 
-    return () => window.removeEventListener("resize", checkScreenSize); 
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  useEffect(() => {
+    setSearchQuery("");
+    setSelectedCategory(activeCategory);
+  }, [activeCategory]);
+
   const handleBookClick = (book: Book) => {
-    setSelectedBook(book)
-    setIsDialogOpen(true)
-  }
+    setSelectedBook(book);
+    setIsDialogOpen(true);
+  };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
@@ -135,7 +168,7 @@ export default function BookList({activeCategory = ""}: BookListProps) {
           : book
       )
     );
-    setEditingBook(null); 
+    setEditingBook(null);
   };
 
   const handleDeleteBook = async (bookId: string) => {
@@ -146,7 +179,7 @@ export default function BookList({activeCategory = ""}: BookListProps) {
   if (loading) {
     return (
       <div className="pt-[300px]">
-        <Loader />
+        <Loading />
       </div>
     );
   }
@@ -173,7 +206,7 @@ export default function BookList({activeCategory = ""}: BookListProps) {
               </Button>
             )}
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[90%]">
             <DialogHeader>
               <DialogTitle>
                 {editingBook ? "Edit Book" : "Add New Book"}
@@ -211,17 +244,24 @@ export default function BookList({activeCategory = ""}: BookListProps) {
                   setFormData((prev) => ({...prev, category: e.target.value}))
                 }
               />
-              <Button
-                onClick={() =>
-                  editingBook ? handleUpdateBook() : handleCreateBook()
-                }
-                className="w-full"
-              >
-                {editingBook ? "Update Book" : "Add Book"}
-              </Button>
+              <DialogClose asChild>
+                <Button
+                  onClick={() =>
+                    editingBook ? handleUpdateBook() : handleCreateBook()
+                  }
+                  className="w-full"
+                >
+                  {editingBook ? "Update Book" : "Add Book"}
+                </Button>
+              </DialogClose>
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+      <div className="w-full flex">
+        <h2 className="text-3xl font-smooch font-semibold mt-4 px-4">
+          {selectedCategory || "All Books"}
+        </h2>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 pt-2">
         {filteredBooks.map((book) => (
@@ -239,49 +279,49 @@ export default function BookList({activeCategory = ""}: BookListProps) {
                 className="w-full h-[200px] object-fill border-[1px]"
               />
             )}
-            <div className="flex w-full justify-between items-center">
-              <div className="flex flex-col items-start">
-                {isMobile ? (
-                  <h2 className="text-lg font-semibold mt-2 font-roboto leading-[1.3rem]">
-                    {book.volumeInfo.title?.length > 10
-                      ? `${book.volumeInfo.title.slice(0, 11)}...`
-                      : book.volumeInfo.title}
-                  </h2>
-                ) : (
-                  <h2 className="text-lg font-semibold mt-2 font-roboto leading-[1.3rem]">
-                    {book.volumeInfo.title?.length > 18
-                      ? `${book.volumeInfo.title.slice(0, 18)}...`
-                      : book.volumeInfo.title}
-                  </h2>
-                )}
+            <div className="flex w-full justify-between items-center flex-col">
+              <div className="flex flex-col items-center">
+                <h2 className="text-md font-semibold mt-2 font-roboto leading-[1rem]">
+                  {book.volumeInfo.title}
+                </h2>
                 <p className="mt-1 text-sm text-gray-600 font-roboto">
                   {book.volumeInfo.authors?.join(", ")}
                 </p>
               </div>
-              <div>
+              <div className="pt-4 w-full flex justify-between">
                 <Button
-                  className="p-[2px] bg-transparent border-none hover:bg-transparent shadow-none"
+                  className="border-[1px] md:px-6 bg-transparent shadow-none hover:bg-yellow-200"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    onFavorite(book.volumeInfo.title);
+                  }}
+                >
+                  <Star
+                    className={`text-yellow-600 ${
+                      favorites.includes(book.volumeInfo.title)
+                        ? "fill-current"
+                        : ""
+                    }`}
+                  />
+                </Button>
+                <Button
+                  className="border-[1px] md:px-6 bg-transparent shadow-none hover:bg-gray-300"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     handleEditBook(book);
                   }}
                 >
-                  <Pencil
-                    size={8}
-                    className="text-gray-700 hover:text-gray-800"
-                  />
+                  <Pencil size={8} className="text-gray-700" />
                 </Button>
                 <Button
-                  className="p-[2px] bg-transparent border-none hover:bg-transparent shadow-none"
+                  className="border-[1px] md:px-6 bg-transparent shadow-none hover:bg-red-200"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    handleDeleteBook(book.id);
+                    setBookToDelete(book.id);
+                    setIsConfirmDelete(true);
                   }}
                 >
-                  <Trash2
-                    size={8}
-                    className="text-red-500 hover:text-red-800"
-                  />
+                  <Trash2 size={8} className="text-red-500" />
                 </Button>
               </div>
             </div>
@@ -347,6 +387,38 @@ export default function BookList({activeCategory = ""}: BookListProps) {
           onClose={handleCloseDialog}
         />
       )}
+
+      <Dialog open={isConfirmDelete} onOpenChange={setIsConfirmDelete}>
+        <DialogContent className="w-[90%]">
+          <DialogHeader className="items-start">
+            <DialogTitle>Confirmed Delete</DialogTitle>
+            <DialogDescription className="text-start">
+              Are you sure you want to delete? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="default"
+              className=""
+              onClick={() => setIsConfirmDelete(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (bookToDelete) {
+                  await handleDeleteBook(bookToDelete);
+                  setIsConfirmDelete(false);
+                  setBookToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
