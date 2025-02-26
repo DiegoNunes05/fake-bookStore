@@ -1,5 +1,34 @@
 import { Book } from "../types";
 
+interface OpenLibraryDoc {
+  key?: string;
+  title: string;
+  author_name?: string[];
+  first_publish_year?: number;
+  description?: string;
+  subject?: string[];
+  cover_i?: number;
+  number_of_pages_median?: number;
+  language?: string[];
+  edition_key?: string[];
+}
+
+interface OpenLibraryBookData {
+  title?: string;
+  authors?: Array<{name: string}>;
+  publish_date?: string;
+  notes?: string;
+  excerpts?: Array<{text: string}>;
+  subjects?: Array<{name: string}>;
+  cover?: {
+    small?: string;
+    medium?: string;
+    large?: string;
+  };
+  number_of_pages?: number;
+  languages?: Array<{key: string}>;
+}
+
 // Função para buscar livros da Open Library API
 export async function fetchBooks(category: string = '', searchQuery: string = ''): Promise<Book[]> {
   try {
@@ -41,7 +70,7 @@ export async function fetchBooks(category: string = '', searchQuery: string = ''
     const data = await response.json();
     
     // Mapear os resultados da Open Library para o formato Book usado no seu app
-    const books: Book[] = data.docs.map((item: any) => {
+    const books: Book[] = data.docs.map((item: OpenLibraryDoc) => {
       return {
         id: item.key || `ol-${item.edition_key?.[0] || Math.random().toString(36).substring(2)}`,
         volumeInfo: {
@@ -84,7 +113,7 @@ export async function fetchBookDetails(bookId: string): Promise<Book | null> {
       }
       
       const data = await response.json();
-      const bookData = data[`OLID:${cleanId}`];
+      const bookData : OpenLibraryBookData = data[`OLID:${cleanId}`];
       
       if (!bookData) return null;
       
@@ -92,7 +121,7 @@ export async function fetchBookDetails(bookId: string): Promise<Book | null> {
         id: bookId,
         volumeInfo: {
           title: bookData.title || 'Unknown Title',
-          authors: bookData.authors?.map((a: any) => a.name) || ['Unknown Author'],
+          authors: bookData.authors?.map((a: {name: string}) => a.name) || ['Unknown Author'],
           publishedDate: bookData.publish_date || 'Unknown',
           description: bookData.notes || bookData.excerpts?.[0]?.text || '',
           categories: bookData.subjects?.map((s: any) => s.name) || [],
