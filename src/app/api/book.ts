@@ -124,7 +124,7 @@ export async function fetchBookDetails(bookId: string): Promise<Book | null> {
           authors: bookData.authors?.map((a: {name: string}) => a.name) || ['Unknown Author'],
           publishedDate: bookData.publish_date || 'Unknown',
           description: bookData.notes || bookData.excerpts?.[0]?.text || '',
-          categories: bookData.subjects?.map((s: any) => s.name) || [],
+          categories: bookData.subjects?.map((s: {name: string}) => s.name) || [],
           imageLinks: {
             thumbnail: bookData.cover?.medium || '/images/placeholder-cover.png'
           },
