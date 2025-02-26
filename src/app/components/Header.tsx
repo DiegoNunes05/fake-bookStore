@@ -89,7 +89,7 @@ export default function Header({favorites}: HeaderProps) {
                           </svg>
                         </div>
                         <p className="mt-5 text-md font-medium font-roboto">
-                          You don't have any favorite books!
+                          {"You don't have any favorite books!"}
                         </p>
                       </div>
                     </div>

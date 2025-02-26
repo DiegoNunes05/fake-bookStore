@@ -32,6 +32,8 @@ interface BookFormData {
   description: string;
   category: string;
   publishedDate: string;
+  pageCount: number; 
+  language: string;
 }
 
 export default function BookList({
@@ -55,6 +57,8 @@ export default function BookList({
     description: "",
     category: "",
     publishedDate: "",
+    pageCount: 0,
+    language: "en"
   });
 
   useEffect(() => {
@@ -78,7 +82,7 @@ export default function BookList({
       }, 500);
       return () => clearTimeout(delayDebounceFn);
     }
-  }, [searchQuery]);
+  }, [searchQuery, activeCategory, loading]);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -120,6 +124,9 @@ export default function BookList({
         imageLinks: {
           thumbnail: "/api/placeholder/200/300",
         },
+        pageCount: formData.pageCount || 0,
+        averageRating: 0,
+        language: formData.language || "en",
       },
     };
 
@@ -132,6 +139,8 @@ export default function BookList({
       description: "",
       category: "",
       publishedDate: "",
+      pageCount: 0,
+      language: "en",
     });
   };
 
@@ -143,6 +152,8 @@ export default function BookList({
       description: book.volumeInfo.description || "",
       category: book.volumeInfo.categories?.[0] || "",
       publishedDate: book.volumeInfo.publishedDate || "",
+      pageCount: book.volumeInfo.pageCount || 0,
+      language: book.volumeInfo.language || "en",
     });
   };
 
